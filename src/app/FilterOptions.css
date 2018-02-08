@@ -1,0 +1,7 @@
+.filter-inputs {
+  display: flex;
+  width: 100%;
+}
+.filter-inputs > .btn {
+  flex: 1;
+}
