@@ -1,0 +1,14 @@
+.user-avatar {
+  height: 40px;
+  width: 40px;
+  margin-right: 5px;
+  /* float: right; */
+
+  border-radius: 25%;
+  border: 1px solid green;
+}
+
+.entry-row td,
+.entry-row th {
+  vertical-align: middle;
+}

@@ -1,19 +1,21 @@
-import React, { Component } from 'react';
+import React from 'react';
+import { Container, Row, Col } from 'reactstrap';
+import FilterOptions from './app/FilterOptions';
+import Loading from './app/Loading';
+import Leaderboard from './app/Leaderboard';
 import './App.css';
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
-      </div>
-    );
-  }
-}
+const isLoading = false;
+
+const App = () => (
+  <Container fluid id="app-container">
+    <Row className="header">
+      <Col>
+        <FilterOptions />
+      </Col>
+    </Row>
+    <Row className="body">{isLoading ? <Loading /> : <Leaderboard />}</Row>
+  </Container>
+);
 
 export default App;
