@@ -10,9 +10,6 @@ const isLoading = false;
 const App = () => (
   <Container fluid id="app-container">
     <Row className="header">
-      {/* <Col xs={4}>
-        <h1>FCC Leaderboard</h1>
-      </Col> */}
       <Col>
         <FilterOptions />
       </Col>
