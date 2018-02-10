@@ -4,35 +4,60 @@ import { setActiveList, loadUserData } from 'store/actions';
 import { Maybe, UserList, toListKey } from 'types';
 import { fetchUsers } from 'store/effects';
 
-it('SET_ACTIVE_LIST', () => {
-  const NEW_LIST = UserList.RecentTop;
-  const state = {
-    active: UserList.AllTimeTop,
-    lists: {
-      recent: { data: Maybe.Nothing, isLoading: false },
-      alltime: 'blah'
-    }
-  };
-  const action = setActiveList(NEW_LIST);
+describe('SET_ACTIVE_LIST', () => {
+  it('not currently loading', () => {
+    const NEW_LIST = UserList.RecentTop;
+    const state = {
+      active: UserList.AllTimeTop,
+      lists: {
+        recent: { data: Maybe.Nothing, isLoading: false },
+        alltime: 'blah'
+      }
+    };
+    const action = setActiveList(NEW_LIST);
 
-  const result = subject(state, action);
+    const result = subject(state, action);
 
-  const expected = {
-    active: NEW_LIST,
-    lists: {
-      recent: { data: Maybe.Nothing, isLoading: true },
-      alltime: 'blah'
-    }
-  };
-  expect(result).toEqual(
-    loop(
-      expected,
-      Cmd.run(fetchUsers, {
-        successActionCreator: loadUserData,
-        args: [NEW_LIST]
-      })
-    )
-  );
+    const expected = {
+      active: NEW_LIST,
+      lists: {
+        recent: { data: Maybe.Nothing, isLoading: true },
+        alltime: 'blah'
+      }
+    };
+    expect(result).toEqual(
+      loop(
+        expected,
+        Cmd.run(fetchUsers, {
+          successActionCreator: loadUserData,
+          args: [NEW_LIST]
+        })
+      )
+    );
+  });
+
+  it('list already loading', () => {
+    const NEW_LIST = UserList.RecentTop;
+    const state = {
+      active: UserList.AllTimeTop,
+      lists: {
+        recent: { data: Maybe.Nothing, isLoading: true },
+        alltime: 'blah'
+      }
+    };
+    const action = setActiveList(NEW_LIST);
+
+    const result = subject(state, action);
+
+    const expected = {
+      active: NEW_LIST,
+      lists: {
+        recent: { data: Maybe.Nothing, isLoading: true },
+        alltime: 'blah'
+      }
+    };
+    expect(result).toEqual(loop(expected, Cmd.none));
+  });
 });
 
 it('LOAD_USER_DATA', () => {

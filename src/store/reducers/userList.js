@@ -1,26 +1,37 @@
-import { pipe, evolve, assocPath, map } from 'ramda';
+import { pipe, evolve, assocPath, map, cond } from 'ramda';
 import { liftState } from 'redux-loop';
 import { createReducer, runWith } from 'utils';
 import { UserList, toListKey, Maybe } from 'types';
 import { SET_ACTIVE_LIST, LOAD_USER_DATA, loadUserData } from 'store/actions';
 import { fetchUsers } from 'store/effects';
 
-const setActiveList = pipe(
-  (state, action) =>
-    evolve(
-      {
-        active: () => action.payload,
-        lists: assocPath([toListKey(action.payload), 'isLoading'], true)
-      },
-      state
-    ),
-  // TODO: run fetch iff not currently loading
-  runWith(state => ({
-    cmd: fetchUsers,
-    onSuccess: loadUserData,
-    args: [state.active]
-  }))
-);
+const IS_LOADING = [
+  // predicate :: (State, { payload :: UserList }) -> Boolean
+  (state, { payload }) => state.lists[toListKey(payload)].isLoading,
+  // transformer :: (State, { payload :: UserList }) -> (State, Cmd)
+  (state, { payload }) => liftState(evolve({ active: () => payload }, state))
+];
+const OTHERWISE = [
+  // predicate :: (State, Action) -> Bool
+  () => true,
+  // transformer :: (State, { payload :: UserList }) -> (State, Cmd)
+  pipe(
+    (state, action) =>
+      evolve(
+        {
+          active: () => action.payload,
+          lists: assocPath([toListKey(action.payload), 'isLoading'], true)
+        },
+        state
+      ),
+    runWith(state => ({
+      cmd: fetchUsers,
+      onSuccess: loadUserData,
+      args: [state.active]
+    }))
+  )
+];
+const setActiveList = cond([IS_LOADING, OTHERWISE]);
 
 const getUsernames = map(({ username }) => username);
 const loadUserList = (state, action) =>
