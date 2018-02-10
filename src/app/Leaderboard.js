@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { applySpec } from 'ramda';
 import { Table } from 'reactstrap';
 import { getLeaderboardEntries } from 'store/selectors';
+import { SortField } from 'types';
 import Entry from './leaderboard/Entry';
 import SortableHeader from './leaderboard/SortableHeader';
 import './Leaderboard.css';
@@ -16,9 +17,9 @@ const Leaderboard = ({ entries }) => (
     <thead>
       <tr>
         <th>#</th>
-        <SortableHeader text="Username" />
-        <SortableHeader text="Recent" active sortType={'DESCENDING'} />
-        <SortableHeader text="All Time" />
+        <SortableHeader field={SortField.Username} />
+        <SortableHeader field={SortField.Recent} />
+        <SortableHeader field={SortField.AllTime} />
       </tr>
     </thead>
     <tbody>{entries.map(renderRow)}</tbody>

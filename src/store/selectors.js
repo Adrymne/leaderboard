@@ -1,20 +1,13 @@
 import { createSelector } from 'reselect';
-import {
-  transduce,
-  map,
-  reject,
-  isNil,
-  append,
-  compose,
-  flip,
-  curry
-} from 'ramda';
+import { transduce, map, reject, isNil, append, compose, flip } from 'ramda';
 import { toListKey, Maybe } from 'types';
 /*
 Username = String
 User = { username :: Username, img :: String, recent :: Int, alltime :: Int }
 
 UserList = RecentTop | AllTimeTop
+SortOrder = Ascending | Descending
+SortField = Username | Recent | AllTime
 
 ListState u = { data :: Maybe u, isLoading :: Bool }
 
@@ -23,6 +16,10 @@ State = {
   userList :: {
     active :: UserList,
     lists :: Dict String (ListState [Username])
+  },
+  sort :: {
+    order :: SortOrder,
+    field :: SortField
   }
 }
 */
@@ -36,14 +33,18 @@ const viewList = (userList, lists) => {
 };
 
 // getActive :: State -> UserList
-const getActive = state => state.userList.active;
+const active = state => state.userList.active;
 // getLists :: State -> Dict String (ListState [Username])
-const getLists = state => state.userList.lists;
+const lists = state => state.userList.lists;
 // getUsers :: State -> Dict Username User
-const getUsers = state => state.users;
+const users = state => state.users;
+// getSortField :: State -> SortField
+const sortField = state => state.sort.field;
+// getSortOrder :: State -> SortOrder
+const sortOrder = state => state.sort.order;
 
 // getActiveList :: State -> ListState [Username]
-const getActiveList = createSelector([getActive, getLists], viewList);
+const getActiveList = createSelector([active, lists], viewList);
 // getActiveUsernames :: State -> [Username]
 const getActiveUsernames = createSelector([getActiveList], ({ data }) =>
   Maybe.case({ Just: usernames => usernames, Nothing: () => [] }, data)
@@ -60,14 +61,24 @@ const mapToUser = users =>
   compose(map(username => users[username]), reject(isNil));
 // getLeaderboardEntires :: State -> [User]
 export const getLeaderboardEntries = createSelector(
-  [getUsers, getActiveUsernames],
+  [users, getActiveUsernames],
   (users, usernames) => transduce(mapToUser(users), flip(append), [], usernames)
 );
 
 // isListLoading :: (State, { userList :: UserList }) -> Bool
 export const isListLoading = (state, { userList }) =>
-  viewList(userList, getLists(state)).isLoading;
+  viewList(userList, lists(state)).isLoading;
 
 // isListSelected :: (State, { userList :: UserList }) -> Bool
 export const isListSelected = (state, { userList }) =>
-  getActive(state) === userList;
+  active(state) === userList;
+
+// isSortingByField :: (State, { field :: SortField }) -> Bool
+export const isSortingByField = (state, { field }) =>
+  field === sortField(state);
+
+// getSortOrder :: (State, { field :: SortField }) -> Maybe SortOrder
+export const getSortOrder = (state, { field }) =>
+  isSortingByField(state, { field })
+    ? Maybe.Just(sortOrder(state))
+    : Maybe.Nothing;

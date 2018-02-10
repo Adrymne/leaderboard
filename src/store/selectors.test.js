@@ -1,5 +1,5 @@
 import * as sut from './selectors';
-import { UserList, toListKey, Maybe } from 'types';
+import { UserList, toListKey, Maybe, SortField, SortOrder } from 'types';
 
 describe('isDataInActiveList', () => {
   const subject = sut.isDataInActiveList;
@@ -95,5 +95,38 @@ describe('isListSelected', () => {
     const result = subject(state, { userList: UserList.RecentTop });
 
     expect(result).toBe(false);
+  });
+});
+
+it('isSortingByField', () => {
+  const subject = sut.isSortingByField;
+  const state = { sort: { field: SortField.AllTime } };
+
+  const result = subject(state, { field: SortField.Recent });
+
+  expect(result).toBe(false);
+});
+
+describe('getSortOrder', () => {
+  const subject = sut.getSortOrder;
+
+  it('specified field is being sorted', () => {
+    const state = {
+      sort: { field: SortField.Recent, order: SortOrder.Ascending }
+    };
+
+    const result = subject(state, { field: SortField.Recent });
+
+    expect(result).toEqual(Maybe.Just(SortOrder.Ascending));
+  });
+
+  it('specified field is not current sort', () => {
+    const state = {
+      sort: { field: SortField.AllTime, order: SortOrder.Descending }
+    };
+
+    const result = subject(state, { field: SortField.Recent });
+
+    expect(result).toBe(Maybe.Nothing);
   });
 });

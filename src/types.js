@@ -9,4 +9,7 @@ export const toListKey = UserList.case({
   AllTimeTop: () => 'alltime'
 });
 
+export const SortOrder = Type({ Ascending: [], Descending: [] });
+export const SortField = Type({ Username: [], Recent: [], AllTime: [] });
+
 export const ListState = Type({ NotLoaded: [], Loaded: [Array] });
