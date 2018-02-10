@@ -1,5 +1,14 @@
 import { createSelector } from 'reselect';
-import { transduce, map, reject, isNil, append, compose, flip } from 'ramda';
+import {
+  transduce,
+  map,
+  reject,
+  isNil,
+  append,
+  compose,
+  flip,
+  curry
+} from 'ramda';
 import { toListKey, Maybe } from 'types';
 /*
 Username = String
@@ -17,6 +26,14 @@ State = {
   }
 }
 */
+// viewList :: (UserList, Dict String (ListState [Username])) -> ListState [Username]
+const viewList = (userList, lists) => {
+  const key = toListKey(userList);
+  if (!lists[key]) {
+    throw new Error(`Bad list key: ${key}`);
+  }
+  return lists[key];
+};
 
 // getActive :: State -> UserList
 const getActive = state => state.userList.active;
@@ -25,22 +42,16 @@ const getLists = state => state.userList.lists;
 // getUsers :: State -> Dict Username User
 const getUsers = state => state.users;
 
-// getActiveUserList :: State -> Maybe [Username]
-const getActiveUserList = createSelector(
-  [getActive, getLists],
-  // NB: list key SHOULD always exist
-  (activeList, lists) => lists[toListKey(activeList)].data
-);
+// getActiveList :: State -> ListState [Username]
+const getActiveList = createSelector([getActive, getLists], viewList);
 // getActiveUsernames :: State -> [Username]
-const getActiveUsernames = createSelector(
-  [getActiveUserList],
-  Maybe.case({ Just: usernames => usernames, Nothing: () => [] })
+const getActiveUsernames = createSelector([getActiveList], ({ data }) =>
+  Maybe.case({ Just: usernames => usernames, Nothing: () => [] }, data)
 );
 
 // isLoadedData :: State -> Bool
-export const isDataInActiveList = createSelector(
-  [getActiveUserList],
-  Maybe.case({ Just: () => true, Nothing: () => false })
+export const isDataInActiveList = createSelector([getActiveList], ({ data }) =>
+  Maybe.case({ Just: () => true, Nothing: () => false }, data)
 );
 
 // mapToUser :: Dict Username User -> Transducer [User] Username
@@ -55,7 +66,7 @@ export const getLeaderboardEntries = createSelector(
 
 // isListLoading :: (State, { userList :: UserList }) -> Bool
 export const isListLoading = (state, { userList }) =>
-  getLists(state)[toListKey(userList)].isLoading;
+  viewList(userList, getLists(state)).isLoading;
 
 // isListSelected :: (State, { userList :: UserList }) -> Bool
 export const isListSelected = (state, { userList }) =>
