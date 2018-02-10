@@ -1,14 +1,14 @@
 import * as sut from './selectors';
-import { UserList, ListState, toListKey } from 'types';
+import { UserList, toListKey, Maybe } from 'types';
 
-describe('isDataLoaded', () => {
-  const subject = sut.isLoadedData;
+describe('isDataInActiveList', () => {
+  const subject = sut.isDataInActiveList;
   it('no data loaded for active list', () => {
     const LIST = UserList.RecentTop;
     const state = {
       userList: {
         active: LIST,
-        lists: { [toListKey(LIST)]: ListState.NotLoaded }
+        lists: { [toListKey(LIST)]: { data: Maybe.Nothing } }
       }
     };
 
@@ -22,7 +22,7 @@ describe('isDataLoaded', () => {
     const state = {
       userList: {
         active: LIST,
-        lists: { [toListKey(LIST)]: ListState.Loaded([1, 2, 3]) }
+        lists: { [toListKey(LIST)]: { data: Maybe.Just([1, 2, 3]) } }
       }
     };
 
@@ -40,7 +40,7 @@ describe('getLeaderboardEntries', () => {
     const state = {
       userList: {
         active: LIST,
-        lists: { [toListKey(LIST)]: ListState.NotLoaded }
+        lists: { [toListKey(LIST)]: { data: Maybe.Nothing } }
       }
     };
 
@@ -58,12 +58,42 @@ describe('getLeaderboardEntries', () => {
       },
       userList: {
         active: LIST,
-        lists: { [toListKey(LIST)]: ListState.Loaded(['user1', 'user2']) }
+        lists: { [toListKey(LIST)]: { data: Maybe.Just(['user1', 'user2']) } }
       }
     };
 
     const result = subject(state);
 
     expect(result).toEqual([state.users.user1, state.users.user2]);
+  });
+});
+
+it('isListLoading', () => {
+  const subject = sut.isListLoading;
+  const LIST = UserList.RecentTop;
+  const KEY = toListKey(LIST);
+  const state = { userList: { lists: { [KEY]: { isLoading: false } } } };
+
+  const result = subject(state, { userList: LIST });
+
+  expect(result).toBe(false);
+});
+
+describe('isListSelected', () => {
+  const subject = sut.isListSelected;
+  it('active', () => {
+    const state = { userList: { active: UserList.RecentTop } };
+
+    const result = subject(state, { userList: UserList.RecentTop });
+
+    expect(result).toBe(true);
+  });
+
+  it('not active', () => {
+    const state = { userList: { active: UserList.AllTimeTop } };
+
+    const result = subject(state, { userList: UserList.RecentTop });
+
+    expect(result).toBe(false);
   });
 });

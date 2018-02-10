@@ -1,56 +1,62 @@
 import { createSelector } from 'reselect';
 import { transduce, map, reject, isNil, append, compose, flip } from 'ramda';
-import { ListState, toListKey } from 'types';
+import { toListKey, Maybe } from 'types';
 /*
 Username = String
 User = { username :: Username, img :: String, recent :: Int, alltime :: Int }
 
 UserList = RecentTop | AllTimeTop
 
-ListState u = NotLoaded | Loaded u
+ListState u = { data :: Maybe u, isLoading :: Bool }
 
 State = {
   users :: Dict Username User,
   userList :: {
     active :: UserList,
-    lists :: {
-      recent :: ListState [Username],
-      alltime :: ListState [Username]
-    }
+    lists :: Dict String (ListState [Username])
   }
 }
 */
 
-// getActiveList :: State -> UserList
-const getActiveList = state => state.userList.active;
-// getUserLists :: State -> Dict String (ListState [Username])
-const getUserLists = state => state.userList.lists;
-// getUsersData :: State -> Dict Username User
-const getUsersData = state => state.users;
+// getActive :: State -> UserList
+const getActive = state => state.userList.active;
+// getLists :: State -> Dict String (ListState [Username])
+const getLists = state => state.userList.lists;
+// getUsers :: State -> Dict Username User
+const getUsers = state => state.users;
 
-// getActiveUserList :: State -> ListState [Username]
+// getActiveUserList :: State -> Maybe [Username]
 const getActiveUserList = createSelector(
-  [getActiveList, getUserLists],
+  [getActive, getLists],
   // NB: list key SHOULD always exist
-  (active, lists) => lists[toListKey(active)]
+  (activeList, lists) => lists[toListKey(activeList)].data
 );
 // getActiveUsernames :: State -> [Username]
 const getActiveUsernames = createSelector(
   [getActiveUserList],
-  ListState.case({ NotLoaded: () => [], Loaded: xs => xs })
+  Maybe.case({ Just: usernames => usernames, Nothing: () => [] })
 );
 
 // isLoadedData :: State -> Bool
-export const isLoadedData = createSelector(
+export const isDataInActiveList = createSelector(
   [getActiveUserList],
-  ListState.case({ NotLoaded: () => false, Loaded: () => true })
+  Maybe.case({ Just: () => true, Nothing: () => false })
 );
 
 // mapToUser :: Dict Username User -> Transducer [User] Username
+// TODO: sorting
 const mapToUser = users =>
   compose(map(username => users[username]), reject(isNil));
 // getLeaderboardEntires :: State -> [User]
 export const getLeaderboardEntries = createSelector(
-  [getUsersData, getActiveUsernames],
+  [getUsers, getActiveUsernames],
   (users, usernames) => transduce(mapToUser(users), flip(append), [], usernames)
 );
+
+// isListLoading :: (State, { userList :: UserList }) -> Bool
+export const isListLoading = (state, { userList }) =>
+  getLists(state)[toListKey(userList)].isLoading;
+
+// isListSelected :: (State, { userList :: UserList }) -> Bool
+export const isListSelected = (state, { userList }) =>
+  getActive(state) === userList;

@@ -1,12 +1,20 @@
-import { pipe, assoc, assocPath, map } from 'ramda';
+import { pipe, evolve, assocPath, map } from 'ramda';
 import { liftState } from 'redux-loop';
 import { createReducer, runWith } from 'utils';
-import { UserList, toListKey, ListState } from 'types';
+import { UserList, toListKey, Maybe } from 'types';
 import { SET_ACTIVE_LIST, LOAD_USER_DATA, loadUserData } from 'store/actions';
 import { fetchUsers } from 'store/effects';
 
 const setActiveList = pipe(
-  (state, action) => assoc('active', action.payload, state),
+  (state, action) =>
+    evolve(
+      {
+        active: () => action.payload,
+        lists: assocPath([toListKey(action.payload), 'isLoading'], true)
+      },
+      state
+    ),
+  // TODO: run fetch iff not currently loading
   runWith(state => ({
     cmd: fetchUsers,
     onSuccess: loadUserData,
@@ -18,15 +26,16 @@ const getUsernames = map(({ username }) => username);
 const loadUserList = (state, action) =>
   assocPath(
     ['lists', toListKey(action.payload.userList)],
-    ListState.Loaded(getUsernames(action.payload.users)),
+    { data: Maybe.Just(getUsernames(action.payload.users)), isLoading: false },
     state
   );
 
+const LIST_INITIAL = { data: Maybe.Nothing, isLoading: false };
 const DEFAULT = {
   active: UserList.RecentTop,
   lists: {
-    [toListKey(UserList.RecentTop)]: ListState.NotLoaded,
-    [toListKey(UserList.AllTimeTop)]: ListState.NotLoaded
+    [toListKey(UserList.RecentTop)]: LIST_INITIAL,
+    [toListKey(UserList.AllTimeTop)]: LIST_INITIAL
   }
 };
 export default createReducer(DEFAULT, {

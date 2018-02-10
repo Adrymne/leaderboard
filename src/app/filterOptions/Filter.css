@@ -1,0 +1,8 @@
+.active-filter-button {
+  display: flex;
+  justify-content: center;
+}
+
+.active-filter-button .loading-spinner {
+  margin-left: 5px;
+}
