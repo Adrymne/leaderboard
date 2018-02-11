@@ -1,19 +1,29 @@
-import React, { Component } from 'react';
+import React from 'react';
+import { connect } from 'react-redux';
+import { applySpec } from 'ramda';
+import { isDataInActiveList } from 'store/selectors';
+import { Container, Row, Col } from 'reactstrap';
+import FilterOptions from './app/FilterOptions';
+import Loading from './app/Loading';
+import Leaderboard from './app/Leaderboard';
+import SourceLink from './app/SourceLink';
 import './App.css';
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
-      </div>
-    );
-  }
-}
+const App = ({ isDataInActiveList }) => (
+  <React.Fragment>
+    <Container fluid id="app-container">
+      <Row className="header">
+        <Col>
+          <FilterOptions />
+        </Col>
+      </Row>
+      <Row className="body">
+        {isDataInActiveList ? <Leaderboard /> : <Loading />}
+      </Row>
+    </Container>
+    <SourceLink />
+  </React.Fragment>
+);
 
-export default App;
+const mapStateToProps = applySpec({ isDataInActiveList });
+export default connect(mapStateToProps)(App);
