@@ -32,8 +32,8 @@ describe('isDataInActiveList', () => {
   });
 });
 
-describe('getLeaderboardEntries', () => {
-  const subject = sut.getLeaderboardEntries;
+describe('getActiveUsers', () => {
+  const subject = sut.getActiveUsers;
 
   it('no data loaded', () => {
     const LIST = UserList.RecentTop;
