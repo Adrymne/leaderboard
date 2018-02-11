@@ -1,19 +1,13 @@
 import React from 'react';
-import { Button, ButtonGroup } from 'reactstrap';
+import { ButtonGroup } from 'reactstrap';
+import { UserList } from 'types';
+import Filter from './filterOptions/Filter';
 import './FilterOptions.css';
 
-const buttonActiveProps = isActive =>
-  isActive ? { active: true } : { outline: true };
-
-const FilterOptions = () => (
+const FilterOptions = ({ setActiveList }) => (
   <ButtonGroup className="filter-inputs">
-    <Button color="info" {...buttonActiveProps(true)}>
-      Recent
-    </Button>
-    <Button color="info" {...buttonActiveProps(false)}>
-      All Time
-    </Button>
+    <Filter userList={UserList.RecentTop} />
+    <Filter userList={UserList.AllTimeTop} />
   </ButtonGroup>
 );
-
 export default FilterOptions;
